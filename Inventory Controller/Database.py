@@ -63,16 +63,17 @@ class AsyncDatabaseManager(Thread):
     def close(self):
         self.execute('__close__')
 
+
 class InventoryDatabase(AsyncDatabaseManager):
     def __init__(self, directory):
         super().__init__(directory)
 
     def add_item(self,
-                 id='', 
-                 sku='', 
-                 name='', 
-                 description='', 
-                 sellprice='', 
+                 id='',
+                 sku='',
+                 name='',
+                 description='',
+                 sellprice='',
                  notes='',
                  category=0):
         command = '''INSERT INTO product(id, sku, name, description, sellprice, notes, category) VALUES({id},"{sku}","{name}","{description}",{sellprice},"{notes}",{category})'''.format(
@@ -92,16 +93,27 @@ class InventoryDatabase(AsyncDatabaseManager):
     def add_item_from_spreadsheet(self, id, sku, quantity, purchases, sellprice, startdate, name, category):
         self.add_item(id, sku, name, '', sellprice, '')
 
-
     def get_product_image(self, SKU):
         image = next(self.select('SELECT image FROM product WHERE sku={}'.format(SKU)))
         data = StringIO(str(image))
         pic = ImageTk.PhotoImage(Image.open(data))
         # Need to think of this
-        patface = Tkinter.Label(func, image=pic)
-        patface.grid(row=0, column=1)
-
+        # patface = Label(func, image=pic)
+        # patface.grid(row=0, column=1)
 
     def get_product_from_id(self, id):
-        command="""SELECT * FROM product WHERE id={}""".format(id)
-        product = self.select(command)
+        command = """SELECT * FROM product WHERE id={}""".format(id)
+        product = Product(next(self.select(command))[0])
+        # Its gonna be unique
+        return product
+
+
+class Product:
+    def __init__(self, product):
+        self.id = product[0]
+        self.sku = product[1]
+        self.name = product[2]
+        self.description = product[3]
+        self.sellprice = product[4]
+        self.notes = product[5]
+        self.category = product[6]
