@@ -7,7 +7,7 @@ else:  # Python 3 is being used
     from tkinter import Tk, Frame, Entry, Label, Button
     from tkinter.ttk import Combobox, Treeview
 
-from Database import InventoryDatabase
+from database import InventoryDatabase
 
 
 class RecordController(Frame):
