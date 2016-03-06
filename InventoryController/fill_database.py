@@ -1,8 +1,8 @@
-import Database
+from database import _db
 
 if __name__ == '__main__':
     
-    db = Database.InventoryDatabase('database.db')
+
     file = open('database_file.txt','r')
     firstline = True
     print('lets begin')
@@ -13,7 +13,6 @@ if __name__ == '__main__':
         a = line.split('$')
         if a == ['']:
             break
-        db.add_item_from_spreadsheet(*a)
-
+        _db.add_item_from_spreadsheet(*a) # This method no longer exists
     file.close()
-    db.close()
+    _db.close()

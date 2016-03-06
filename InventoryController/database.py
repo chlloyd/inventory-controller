@@ -1,5 +1,5 @@
 ﻿import os, sqlite3, sys, time
-
+import unittest
 from threading import Thread, Event
 
 if sys.version < '3':  # Python 2
@@ -33,7 +33,7 @@ class AsyncDatabaseManager(Thread):
             job, sql, arg, res = self.queue.get_nowait()
             if sql == '__close__':
                 break
-            cursor.execute(sql)
+            cursor.execute(sql, arg)
             time.sleep(0.01)
             db.commit()
             if res:
@@ -64,48 +64,7 @@ class AsyncDatabaseManager(Thread):
         self.execute('__close__')
 
 
-class InventoryDatabase(AsyncDatabaseManager):
-    def __init__(self, directory):
-        super().__init__(directory)
-
-    def add_item(self,
-                 id='',
-                 sku='',
-                 name='',
-                 description='',
-                 sellprice='',
-                 notes='',
-                 category=0):
-        command = '''INSERT INTO product(id, sku, name, description, sellprice, notes, category) VALUES({id},"{sku}","{name}","{description}",{sellprice},"{notes}",{category})'''.format(
-            id=id,
-            sku=sku,
-            name=name,
-            description=description,
-            sellprice=sellprice,
-            notes=notes,
-            category=category)
-        try:
-            print(command)
-        except Exception:
-            pass
-        self.execute(command)
-
-    def add_item_from_spreadsheet(self, id, sku, quantity, purchases, sellprice, startdate, name, category):
-        self.add_item(id, sku, name, '', sellprice, '')
-
-    def get_product_image(self, SKU):
-        image = next(self.select('SELECT image FROM product WHERE sku={}'.format(SKU)))
-        data = StringIO(str(image))
-        pic = ImageTk.PhotoImage(Image.open(data))
-        # Need to think of this
-        # patface = Label(func, image=pic)
-        # patface.grid(row=0, column=1)
-
-    def get_product_from_id(self, id):
-        command = """SELECT * FROM product WHERE id={}""".format(id)
-        product = Product(next(self.select(command))[0])
-        # Its gonna be unique
-        return product
+_db = AsyncDatabaseManager('database.db')
 
 
 class Product:
@@ -117,3 +76,40 @@ class Product:
         self.sellprice = product[4]
         self.notes = product[5]
         self.category = product[6]
+
+    @classmethod
+    def from_nothing(cls,
+                     id=None,
+                     sku=None,
+                     name=None,
+                     description=None,
+                     sellprice=None,
+                     notes=None,
+                     category=None):
+        return cls((id, sku, name, description, sellprice, notes, category))
+
+    @classmethod
+    def from_sku(cls, sku):
+        command = '''SELECT * FROM product WHERE sku=?'''
+        return cls(next(_db.select(command, args=(sku,))))
+
+    def save_to_db(self):
+        args = (
+            self.sku,
+            self.sku,
+            self.name,
+            self.description,
+            self.sellprice,
+            self.notes,
+            self.category,
+        )
+        command = 'INSERT OR REPLACE INTO product VALUES ((SELECT id FROM product WHERE sku=?),?,?,?,?,?,?)'
+        _db.select(command, args=args, priority=1)
+
+
+class TestDatabase(unittest.TestCase):
+    def setUp(self):
+        self.db = AsyncDatabaseManager('test.db')
+
+    def test_add_product(self):
+        p = Product.from_nothing()

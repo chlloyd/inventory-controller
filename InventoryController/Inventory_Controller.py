@@ -7,9 +7,10 @@ else:  # Python 3 is being used
     from tkinter import Tk, Frame, Entry, Label, Button
     from tkinter.ttk import Combobox, Treeview
 
-from database import InventoryDatabase
+import database
 
 
+# noinspection PyAttributeOutsideInit
 class RecordController(Frame):
     def __init__(self, master, *args, **kwargs):
         super(RecordController, self).__init__(master, *args, **kwargs)
@@ -46,11 +47,11 @@ class RecordController(Frame):
             self.current_record += 1  # TODO This isnt right for now
 
 
+# noinspection PyAttributeOutsideInit
 class App(Frame):
     def __init__(self, master, *args, **kwargs):
         super(App, self).__init__(master, *args, **kwargs)
         self.master = master
-        self.db = InventoryDatabase('database.db')
         self.create_widgets()
 
     def create_widgets(self):
@@ -124,7 +125,7 @@ class App(Frame):
         self.record_controller.grid(column=1, row=9, columnspan=4)
 
     def destroy(self):
-        self.db.close()
+        database._db.close()
         super(App, self).destroy()
 
 
