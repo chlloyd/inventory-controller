@@ -1,13 +1,20 @@
 ﻿import sys
 
 if sys.version < '3':  # Python 2
-    from Tkinter import Tk, Frame, Entry, Label, Button
+    from Tkinter import Tk, Frame, Entry, Label, Button, Menu
     from Tkinter.ttk import Combobox, Treeview
+    from ConfigParser import ConfigParser
 else:  # Python 3 is being used
-    from tkinter import Tk, Frame, Entry, Label, Button
+    from tkinter import Tk, Frame, Entry, Label, Button, Menu
     from tkinter.ttk import Combobox, Treeview
+    from configparser import ConfigParser
 
-import database
+from .database import _db, Product
+
+
+class InventoryMenu(Menu):
+    def __init__(self, **kwargs):
+        super(InventoryMenu, self).__init__(**kwargs)
 
 
 # noinspection PyAttributeOutsideInit
@@ -53,6 +60,8 @@ class App(Frame):
         super(App, self).__init__(master, *args, **kwargs)
         self.master = master
         self.create_widgets()
+        self.config = {}
+        self.load_config_file()
 
     def create_widgets(self):
         self.item_number_label = Label(self, text='Item Number: ')
@@ -125,14 +134,20 @@ class App(Frame):
         self.record_controller.grid(column=1, row=9, columnspan=4)
 
     def destroy(self):
-        database._db.close()
+        _db.close()
         super(App, self).destroy()
 
+    def load_config_file(self):
+        c = ConfigParser()
 
-root = Tk()
-root.geometry('800x600')
-root.update()
-root.minsize(root.winfo_width(), root.winfo_height())
-root.maxsize(root.winfo_width(), root.winfo_height())
-App(root).pack(fill='both', side='top', expand=True)
-root.mainloop()
+
+
+def main():
+    root = Tk()
+    root.geometry('800x600')
+    root.title('Inventory Manager')
+    root.update()
+    root.minsize(root.winfo_width(), root.winfo_height())
+    root.maxsize(root.winfo_width(), root.winfo_height())
+    App(root).pack(fill='both', side='top', expand=True)
+    root.mainloop()
